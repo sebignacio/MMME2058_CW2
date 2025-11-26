@@ -5,23 +5,24 @@
 
 % Gathering the peaks and troughs from the data
 time = out.tout;
-v_tas = out.S_Airspeed.signals.values;
+v_tas_a = out.S_Airspeed.signals.values;
+gamma = out.S_FlightPathAngle.signals.values;
 
 pks = [];      % To store peak values
 max_locs = []; % To store peak times
 ths = [];      % To store valley values
 min_locs = []; % To store valley times
 
-for i = 2:length(v_tas)-1
-    % FIND PEAKS: Current point is higher than neighbours
-    if v_tas(i) > v_tas(i-1) && v_tas(i) > v_tas(i+1)
-        pks = [pks, v_tas(i)];
+for i = 2:length(v_tas_a)-1
+    % Find Peak: Current point is higher than neighbours
+    if v_tas_a(i) > v_tas_a(i-1) && v_tas_a(i) > v_tas_a(i+1)
+        pks = [pks, v_tas_a(i)];
         max_locs = [max_locs, time(i)];
     end
     
-    % FIND VALLEYS: Current point is lower than neighbours
-    if v_tas(i) < v_tas(i-1) && v_tas(i) < v_tas(i+1)
-        ths = [ths, v_tas(i)];
+    % Find Troughs: Current point is lower than neighbours
+    if v_tas_a(i) < v_tas_a(i-1) && v_tas_a(i) < v_tas_a(i+1)
+        ths = [ths, v_tas_a(i)];
         min_locs = [min_locs, time(i)];
     end
 end
@@ -36,12 +37,29 @@ t3 = max_locs(2);
 T = t3 - t1;
 
 % Calculating damping and frequency
-delta = -log((v3-v2)/(v2-v1));
+delta = -log(abs((v3-v2)/(v2-v1)));
 zeta = delta/sqrt(3.14^2 - delta^2);
 
 omega_n = (2*3.14)/(T*sqrt(1-zeta^2));
-fprintf('---------------------------------\n');
+
 fprintf('Period (T):        %.4f s\n', T);
 fprintf('Damping (zeta):    %.4f\n', zeta);
 fprintf('Nat. Freq (wn):    %.4f rad/s\n', omega_n);
-fprintf('---------------------------------\n');
+
+% Graphing
+figure('Name', 'Phugoid Time History: Increased Airspeed');
+
+subplot(2,1,1);
+plot(time,v_tas_a);
+grid on;
+title('Phugoid Response: Airspeed');
+ylabel('Airspeed(m/s)');
+xlabel('Time(s)');
+
+subplot(2,1,2);
+plot(time,gamma);
+grid on;
+title('Phugoid Response: Flight Path Angle');
+ylabel('Flight Path Angle(rad)');
+xlabel('Time(s)');
+
